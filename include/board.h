@@ -1,12 +1,18 @@
 #pragma once
 #include <cstdint>
+#include <bit>
 
 
 using u64 = uint64_t;
 
 #define set_bit(board, sq) ((board) |= (1ULL << sq))
 #define clear_bit(board, sq) ((board) &= ~(1ULL << sq))
-#define get_LSB(board) (__builtin_ctzll(board))
+
+inline int get_LSB(u64 board)
+{
+	return std::countr_zero(board);
+}
+
 
 class Board
 {

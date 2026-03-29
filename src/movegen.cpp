@@ -1,5 +1,8 @@
 #include "movegen.h"
 
+u64 KNIGHT_MOVES[64];
+u64 KING_MOVES[64];
+
 void startUp()
 {
 	for (int sq = 8; sq <= 15; sq++)
@@ -12,7 +15,7 @@ void startUp()
 		set_bit(RANK_7, sq);
 	}
 
-	for (int sq = 0; sq <= 48; sq+=8)
+	for (int sq = 0; sq <= 56; sq+=8)
 	{
 		set_bit(FILE_A, sq);
 		set_bit(FILES_AB, sq);
@@ -36,9 +39,9 @@ void startUp()
 	initKnightMoves();
 }
 
-std::vector<Move> generateWhitePawnMoves(const Board& board)
+MoveList generateWhitePawnMoves(const Board& board)
 {
-	std::vector<Move> moves;
+	MoveList moves;
 
 	u64 emptySquares = ~(board.whitePieces() | board.blackPieces());
 	u64 pawns = board.whitePawns;
@@ -49,7 +52,7 @@ std::vector<Move> generateWhitePawnMoves(const Board& board)
 	{
 		int to = get_LSB(singlePush);
 		clear_bit(singlePush, to);
-		moves.push_back({ to - 8, to });
+		moves.push({ to - 8, to });
 	}
 
 	// Double push
@@ -59,7 +62,7 @@ std::vector<Move> generateWhitePawnMoves(const Board& board)
 	{
 		int to = get_LSB(doublePush);
 		clear_bit(doublePush, to);
-		moves.push_back({ to - 16, to });
+		moves.push({ to - 16, to });
 	}
 
 	// Captures
@@ -68,7 +71,7 @@ std::vector<Move> generateWhitePawnMoves(const Board& board)
 	{
 		int to = get_LSB(capturesLeft);
 		clear_bit(capturesLeft, to);
-		moves.push_back({ to - 7, to });
+		moves.push({ to - 7, to });
 	}
 
 	u64 capturesRight = ((pawns << 9) & ~FILE_A) & board.blackPieces();
@@ -76,15 +79,15 @@ std::vector<Move> generateWhitePawnMoves(const Board& board)
 	{
 		int to = get_LSB(capturesRight);
 		clear_bit(capturesRight, to);
-		moves.push_back({ to - 9, to });
+		moves.push({ to - 9, to });
 	}
 
 	return moves;
 }
 
-std::vector<Move> generateBlackPawnMoves(const Board& board)
+MoveList generateBlackPawnMoves(const Board& board)
 {
-	std::vector<Move> moves;
+	MoveList moves;
 
 	u64 emptySquares = ~(board.whitePieces() | board.blackPieces());
 	u64 pawns = board.blackPawns;
@@ -95,17 +98,17 @@ std::vector<Move> generateBlackPawnMoves(const Board& board)
 	{
 		int to = get_LSB(singlePush);
 		clear_bit(singlePush, to);
-		moves.push_back({ to + 8, to });
+		moves.push({ to + 8, to });
 	}
 
 	// Double push
 	u64 doublePush = ((pawns & RANK_7) >> 8) & emptySquares;
-	doublePush = (doublePush << 8) & emptySquares;
+	doublePush = (doublePush >> 8) & emptySquares;
 	while (doublePush)
 	{
 		int to = get_LSB(doublePush);
 		clear_bit(doublePush, to);
-		moves.push_back({ to + 16, to });
+		moves.push({ to + 16, to });
 	}
 
 	// Captures
@@ -114,7 +117,7 @@ std::vector<Move> generateBlackPawnMoves(const Board& board)
 	{
 		int to = get_LSB(capturesLeft);
 		clear_bit(capturesLeft, to);
-		moves.push_back({ to + 7, to });
+		moves.push({ to + 7, to });
 	}
 
 	u64 capturesRight = ((pawns >> 9) & ~FILE_H) & board.whitePieces();
@@ -122,7 +125,7 @@ std::vector<Move> generateBlackPawnMoves(const Board& board)
 	{
 		int to = get_LSB(capturesRight);
 		clear_bit(capturesRight, to);
-		moves.push_back({ to + 9, to });
+		moves.push({ to + 9, to });
 	}
 
 	return moves;
@@ -145,9 +148,9 @@ void initKnightMoves()
 	}
 }
 
-std::vector<Move> generateWhiteKnightMoves(const Board& board)
+MoveList generateWhiteKnightMoves(const Board& board)
 {
-	std::vector<Move> moves;
+	MoveList moves;
 	u64 knights = board.whiteKnights;
 	while (knights)
 	{
@@ -158,10 +161,251 @@ std::vector<Move> generateWhiteKnightMoves(const Board& board)
 		{
 			int to = get_LSB(captures);
 			clear_bit(captures, to);
-			moves.push_back({ from, to });
+			moves.push({ from, to });
 		}
 	}
 	return moves;
+}
+
+MoveList generateBlackKnightMoves(const Board& board)
+{
+	MoveList moves;
+	u64 knights = board.blackKnights;
+	while (knights)
+	{
+		int from = get_LSB(knights);
+		clear_bit(knights, from);
+		u64 captures = KNIGHT_MOVES[from] & ~board.blackPieces();
+		while (captures)
+		{
+			int to = get_LSB(captures);
+			clear_bit(captures, to);
+			moves.push({ from, to });
+		}
+	}
+	return moves;
+}
+
+void initKingMoves()
+{
+	for (int sq = 0; sq < 64; sq++)
+	{
+		u64 king = 1ULL << sq;
+		KING_MOVES[sq] =
+			(king << 8) |
+			(king >> 8) |
+			((king << 1) & ~FILE_A) |
+			((king >> 1) & ~FILE_H) |
+			((king << 9) & ~FILE_A) |
+			((king << 7) & ~FILE_H) |
+			((king >> 7) & ~FILE_A) |
+			((king >> 9) & ~FILE_H);
+	}
+}
+
+MoveList generateWhiteKingMoves(const Board& board)
+{
+	MoveList moves;
+	u64 king = board.whiteKing;
+	int from = get_LSB(king);
+	clear_bit(king, from);
+	u64 captures = KING_MOVES[from] & ~board.whitePieces();
+	while (captures)
+	{
+		int to = get_LSB(captures);
+		clear_bit(captures, to);
+		moves.push({ from, to });
+	}
+	return moves;
+}
+
+MoveList generateBlackKingMoves(const Board& board)
+{
+	MoveList moves;
+	u64 king = board.blackKing;
+	int from = get_LSB(king);
+	clear_bit(king, from);
+	u64 captures = KING_MOVES[from] & ~board.blackPieces();
+	while (captures)
+	{
+		int to = get_LSB(captures);
+		clear_bit(captures, to);
+		moves.push({ from, to });
+	}
+	return moves;
+}
+
+MoveList generateWhiteBishopMoves(const Board& board)
+{
+	MoveList moves;
+	u64 bipshops = board.whiteBishops;
+	u64 ownPieces = board.whitePieces();
+	u64 enemyPieces = board.blackPieces();
+
+	while (bipshops)
+	{
+		int from = get_LSB(bipshops);
+		clear_bit(bipshops, from);
+
+		// Up-right (+9)
+		int sq = from;
+		while (sq % 8 != 7 && sq < 56)
+		{
+			sq += 9;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Up-left (+7)
+		sq = from;
+		while (sq % 8 != 0 && sq < 56)
+		{
+			sq += 7;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Down-right (-7)
+		sq = from;
+		while (sq % 8 != 7 && sq > 7)
+		{
+			sq -= 7;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Down-left (-9)
+		sq = from;
+		while (sq % 8 != 0 && sq > 7)
+		{
+			sq -= 9;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+	}
+	
+	return moves;
+}
+
+MoveList generateBlackBishopMoves(const Board& board)
+{
+	MoveList moves;
+	u64 bipshops = board.blackBishops;
+	u64 ownPieces = board.blackPieces();
+	u64 enemyPieces = board.whitePieces();
+
+	while (bipshops)
+	{
+		int from = get_LSB(bipshops);
+		clear_bit(bipshops, from);
+
+		// Up-right (+9)
+		int sq = from;
+		while (sq % 8 != 7 && sq < 55)
+		{
+			sq += 9;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Up-left (+7)
+		sq = from;
+		while (sq % 8 != 0 && sq < 55)
+		{
+			sq += 7;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Down-right (-7)
+		sq = from;
+		while (sq % 8 != 7 && sq > 8)
+		{
+			sq -= 7;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Down-left (-9)
+		sq = from;
+		while (sq % 8 != 0 && sq > 8)
+		{
+			sq -= 9;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+	}
+
+	return moves;
+}
+
+MoveList generateWhiteRookMoves(const Board& board)
+{
+	MoveList moves;
+	u64 rooks = board.whiteRooks;
+	u64 ownPieces = board.whitePieces();
+	u64 enemyPieces = board.blackPieces();
+
+	while (rooks)
+	{
+		int from = get_LSB(rooks);
+		clear_bit(rooks, from);
+
+		// Up (+8)
+		int sq = from;
+		while (sq < 56)
+		{
+			sq += 8;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Down (-8)
+		sq = from;
+		while (sq > 7)
+		{
+			sq -= 8;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Right (+1)
+		sq = from;
+		while (sq % 8 != 7)
+		{
+			sq += 1;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+
+		// Left (-1)
+		sq = from;
+		while (sq % 8 != 0)
+		{
+			sq -= 1;
+			if (ownPieces & (1ULL << sq)) break;
+			moves.push({ from, sq });
+			if (enemyPieces & (1ULL << sq)) break;
+		}
+	}
+
+	return moves;
+}
+
+MoveList generateBlackRookMoves(const Board& board)
+{
+	return MoveList();
 }
 
 

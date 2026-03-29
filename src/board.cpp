@@ -16,6 +16,9 @@ enum Square {
 // ULL = unsigned long long; << is a bit-shift operator, shifts bits of 1ULL to the left by e.g. A1 positions
 void Board::init()
 {
+	whitePawns = whiteKnights = whiteBishops = whiteRooks = whiteQueens = whiteKing = 0ULL;
+	blackPawns = blackKnights = blackBishops = blackRooks = blackQueens = blackKing = 0ULL;
+
 	u64 wP = 0ULL;
 	for (int sq = 8; sq <= 15; sq++)
 	{
@@ -37,14 +40,14 @@ void Board::init()
 		set_bit(bP, sq);
 	}
 	blackPawns = bP;
-	set_bit(whiteKnights, B8);
-	set_bit(whiteKnights, G8);
-	set_bit(whiteBishops, C8);
-	set_bit(whiteBishops, F8);
-	set_bit(whiteRooks, A8);
-	set_bit(whiteRooks, H8);
-	set_bit(whiteQueens, D8);
-	set_bit(whiteKing, E8);
+	set_bit(blackKnights, B8);
+	set_bit(blackKnights, G8);
+	set_bit(blackBishops, C8);
+	set_bit(blackBishops, F8);
+	set_bit(blackRooks, A8);
+	set_bit(blackRooks, H8);
+	set_bit(blackQueens, D8);
+	set_bit(blackKing, E8);
 }
 
 void Board::print()
