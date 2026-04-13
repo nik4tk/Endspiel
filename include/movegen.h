@@ -1,6 +1,6 @@
 #pragma once
 #include "board.h"
-#include <vector>
+#include "move.h"
 
 inline u64 RANK_2 = 0ULL;
 inline u64 RANK_7 = 0ULL;
@@ -12,33 +12,45 @@ inline u64 FILES_GH = 0ULL;
 extern u64 KNIGHT_MOVES[64];
 extern u64 KING_MOVES[64];
 
-struct Move {
-	int from;
-	int to;
-};
-
 struct MoveList {
 	Move moves[256]; // 218, because a normal chess-position only has ~218 legal moves
 	int count = 0;
 
-	void push(Move m) { moves[count++] = m; }
+	Move* begin() { return moves; }
+	Move* end() { return moves + count; }
+	const Move* begin() const { return moves; }
+	const Move* end() const { return moves + count;	}
+
+	void push(Move m) { if (count < 256) moves[count++] = m; }
 };
 
 void startUp();
 
-MoveList generateWhitePawnMoves(const Board& board);
-MoveList generateBlackPawnMoves(const Board& board);
+// General moves
+void generateWhitePawnMoves(const Board& board, MoveList& moves);
+void generateBlackPawnMoves(const Board& board, MoveList& moves);
 
 void initKnightMoves();
-MoveList generateWhiteKnightMoves(const Board& board);
-MoveList generateBlackKnightMoves(const Board& board);
+void generateWhiteKnightMoves(const Board& board, MoveList& moves);
+void generateBlackKnightMoves(const Board& board, MoveList& moves);
 
 void initKingMoves();
-MoveList generateWhiteKingMoves(const Board& board);
-MoveList generateBlackKingMoves(const Board& board);
+void generateWhiteKingMoves(const Board& board, MoveList& moves);
+void generateBlackKingMoves(const Board& board, MoveList& moves);
 
-MoveList generateWhiteBishopMoves(const Board& board);
-MoveList generateBlackBishopMoves(const Board& board);
+void generateWhiteBishopMoves(const Board& board, MoveList& moves);
+void generateBlackBishopMoves(const Board& board, MoveList& moves);
 
-MoveList generateWhiteRookMoves(const Board& board);
-MoveList generateBlackRookMoves(const Board& board);
+void generateWhiteRookMoves(const Board& board, MoveList& moves);
+void generateBlackRookMoves(const Board& board, MoveList& moves);
+
+void generateWhiteQueenMoves(const Board& board, MoveList& moves);
+void generateBlackQueenMoves(const Board& board, MoveList& moves);
+
+// Generate all pseudo/legal-moves
+MoveList generatePseudoMoves(const Board& board, bool whiteToMove);
+MoveList generateWhiteLegalMoves(const Board& board);
+MoveList generateBlackLegalMoves(const Board& board);
+
+// King-safety
+bool isSquareAttacked(const Board& board, int sq, bool byWhite);

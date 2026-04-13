@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <bit>
 
+#include "move.h"
 
 using u64 = uint64_t;
 
@@ -31,6 +32,14 @@ public:
 		return blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
 	}
 
+	u64 allPieces() const
+	{
+		return whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing | blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
+	}
+
 	void init();
 	void print();
+
+	void makeMove(const Move& m);
+	void undoMove(const Move& m);
 };
