@@ -11,4 +11,4 @@ add_executable(chess_engine
     src/main.cpp
     src/board.cpp
     src/movegen.cpp
-)
+ "include/move.h")
