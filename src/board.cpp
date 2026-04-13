@@ -86,83 +86,114 @@ void Board::print()
 
 void Board::makeMove(const Move& m)
 {
-	u64 fromBB = 1ULL << m.from;
-	u64 toBB = 1ULL << m.to;
+    u64 fromBB = 1ULL << m.from;
+    u64 toBB = 1ULL << m.to;
 
-	// Removes captured piece (if any)
-	// White
-	whitePawns &= ~toBB;
-	whiteKnights &= ~toBB;
-	whiteBishops &= ~toBB;
-	whiteRooks &= ~toBB;
-	whiteQueens &= ~toBB;
+    // Move the piece
+    switch (m.piece)
+    {
+    case WP: whitePawns ^= fromBB; whitePawns |= toBB; break;
+    case WN: whiteKnights ^= fromBB; whiteKnights |= toBB; break;
+    case WB: whiteBishops ^= fromBB; whiteBishops |= toBB; break;
+    case WR: whiteRooks ^= fromBB; whiteRooks |= toBB; break;
+    case WQ: whiteQueens ^= fromBB; whiteQueens |= toBB; break;
+    case WK: whiteKing ^= fromBB; whiteKing |= toBB; break;
 
-	// Black
-	blackPawns &= ~toBB;
-	blackKnights &= ~toBB;
-	blackBishops &= ~toBB;
-	blackRooks &= ~toBB;
-	blackQueens &= ~toBB;
+    case BP: blackPawns ^= fromBB; blackPawns |= toBB; break;
+    case BN: blackKnights ^= fromBB; blackKnights |= toBB; break;
+    case BB: blackBishops ^= fromBB; blackBishops |= toBB; break;
+    case BR: blackRooks ^= fromBB; blackRooks |= toBB; break;
+    case BQ: blackQueens ^= fromBB; blackQueens |= toBB; break;
+    case BK: blackKing ^= fromBB; blackKing |= toBB; break;
+    }
 
-	//White
-	if (whitePawns & fromBB)
-	{
-		whitePawns &= ~fromBB;
-		whitePawns |= toBB;
-	}
-	else if (whiteKnights & fromBB)
-	{
-		whiteKnights &= ~fromBB;
-		whiteKnights |= toBB;
-	}
-	else if (whiteBishops & fromBB)
-	{
-		whiteBishops &= ~fromBB;
-		whiteBishops |= toBB;
-	}
-	else if (whiteRooks & fromBB)
-	{
-		whiteRooks &= ~fromBB;
-		whiteRooks |= toBB;
-	}
-	else if (whiteQueens & fromBB)
-	{
-		whiteQueens &= ~fromBB;
-		whiteQueens |= toBB;
-	}
-	else if (whiteKing & fromBB)
-	{
-		whiteKing = toBB;
-	}
+    // Capture handling
+    if (m.capturePiece != NO_PIECE)
+    {
+        switch (m.capturePiece)
+        {
+        case WP: whitePawns &= ~toBB; break;
+        case WN: whiteKnights &= ~toBB; break;
+        case WB: whiteBishops &= ~toBB; break;
+        case WR: whiteRooks &= ~toBB; break;
+        case WQ: whiteQueens &= ~toBB; break;
+        case WK: whiteKing &= ~toBB; break;
 
-	// Black
-	if (blackPawns & fromBB)
-	{
-		blackPawns &= ~fromBB;
-		blackPawns |= toBB;
-	}
-	else if (blackKnights & fromBB)
-	{
-		blackKnights &= ~fromBB;
-		blackKnights |= toBB;
-	}
-	else if (blackBishops & fromBB)
-	{
-		blackBishops &= ~fromBB;
-		blackBishops |= toBB;
-	}
-	else if (blackRooks & fromBB)
-	{
-		blackRooks &= ~fromBB;
-		blackRooks |= toBB;
-	}
-	else if (blackQueens & fromBB)
-	{
-		blackQueens &= ~fromBB;
-		blackQueens |= toBB;
-	}
-	else if (blackKing & fromBB)
-	{
-		blackKing = toBB;
-	}
+        case BP: blackPawns &= ~toBB; break;
+        case BN: blackKnights &= ~toBB; break;
+        case BB: blackBishops &= ~toBB; break;
+        case BR: blackRooks &= ~toBB; break;
+        case BQ: blackQueens &= ~toBB; break;
+        case BK: blackKing &= ~toBB; break;
+        }
+    }
+
+    // Special moves
+
+    // En passant
+    if (m.flags & (1 << 2))
+    {
+        if (m.piece == WP)
+        {
+            u64 capSq = 1ULL << (m.to - 8);
+            blackPawns &= ~capSq;
+        }
+        else if (m.piece == BP)
+        {
+            u64 capSq = 1ULL << (m.to + 8);
+            whitePawns &= ~capSq;
+        }
+    }
+
+    // Castling
+    if (m.flags & (1 << 3))
+    {
+        // White
+        if (m.piece == WK)
+        {
+            // King side
+            if (m.to == 6) // g1
+            {
+                whiteRooks &= ~(1ULL << 7); // h1
+                whiteRooks |= (1ULL << 5); // f1
+            }
+            // Queen side
+            else if (m.to == 2) // c1
+            {
+                whiteRooks &= ~(1ULL << 0); // a1
+                whiteRooks |= (1ULL << 3); // d1
+            }
+        }
+
+        // Black
+        if (m.piece == BK)
+        {
+            if (m.to == 62) // g8
+            {
+                blackRooks &= ~(1ULL << 63);
+                blackRooks |= (1ULL << 61);
+            }
+            else if (m.to == 58) // c8
+            {
+                blackRooks &= ~(1ULL << 56);
+                blackRooks |= (1ULL << 59);
+            }
+        }
+    }
+
+    // Promotion
+    if (m.flags & (1 << 4))
+    {
+        // Remove pawn
+        if (m.piece == WP) whitePawns &= ~toBB;
+        if (m.piece == BP) blackPawns &= ~toBB;
+
+        // Promote to queen (for now)
+        if (m.piece == WP) whiteQueens |= toBB;
+        if (m.piece == BP) blackQueens |= toBB;
+    }
+}
+
+void Board::undoMove(const Move& m)
+{
 }

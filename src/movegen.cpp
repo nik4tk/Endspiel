@@ -674,7 +674,7 @@ MoveList generateBlackLegalMoves(const Board& board)
 
 		int kingSq = get_LSB(copy.blackKing);
 
-		if (!isSquareAttacked(copy, kingSq, false)) legal.push(m);
+		if (!isSquareAttacked(copy, kingSq, true)) legal.push(m);
 	}
 
 	return legal;
