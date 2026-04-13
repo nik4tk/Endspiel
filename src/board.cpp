@@ -83,3 +83,86 @@ void Board::print()
 	}
 	std::cout << "  a b c d e f g h\n";
 }
+
+void Board::makeMove(const Move& m)
+{
+	u64 fromBB = 1ULL << m.from;
+	u64 toBB = 1ULL << m.to;
+
+	// Removes captured piece (if any)
+	// White
+	whitePawns &= ~toBB;
+	whiteKnights &= ~toBB;
+	whiteBishops &= ~toBB;
+	whiteRooks &= ~toBB;
+	whiteQueens &= ~toBB;
+
+	// Black
+	blackPawns &= ~toBB;
+	blackKnights &= ~toBB;
+	blackBishops &= ~toBB;
+	blackRooks &= ~toBB;
+	blackQueens &= ~toBB;
+
+	//White
+	if (whitePawns & fromBB)
+	{
+		whitePawns &= ~fromBB;
+		whitePawns |= toBB;
+	}
+	else if (whiteKnights & fromBB)
+	{
+		whiteKnights &= ~fromBB;
+		whiteKnights |= toBB;
+	}
+	else if (whiteBishops & fromBB)
+	{
+		whiteBishops &= ~fromBB;
+		whiteBishops |= toBB;
+	}
+	else if (whiteRooks & fromBB)
+	{
+		whiteRooks &= ~fromBB;
+		whiteRooks |= toBB;
+	}
+	else if (whiteQueens & fromBB)
+	{
+		whiteQueens &= ~fromBB;
+		whiteQueens |= toBB;
+	}
+	else if (whiteKing & fromBB)
+	{
+		whiteKing = toBB;
+	}
+
+	// Black
+	if (blackPawns & fromBB)
+	{
+		blackPawns &= ~fromBB;
+		blackPawns |= toBB;
+	}
+	else if (blackKnights & fromBB)
+	{
+		blackKnights &= ~fromBB;
+		blackKnights |= toBB;
+	}
+	else if (blackBishops & fromBB)
+	{
+		blackBishops &= ~fromBB;
+		blackBishops |= toBB;
+	}
+	else if (blackRooks & fromBB)
+	{
+		blackRooks &= ~fromBB;
+		blackRooks |= toBB;
+	}
+	else if (blackQueens & fromBB)
+	{
+		blackQueens &= ~fromBB;
+		blackQueens |= toBB;
+	}
+	else if (blackKing & fromBB)
+	{
+		blackKing = toBB;
+	}
+}
