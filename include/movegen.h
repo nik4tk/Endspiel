@@ -27,6 +27,8 @@ struct MoveList {
 void startUp();
 
 // General moves
+static void promotions(MoveList& moves, int from, int, int pawn, int captured);
+
 void generateWhitePawnMoves(const Board& board, MoveList& moves);
 void generateBlackPawnMoves(const Board& board, MoveList& moves);
 

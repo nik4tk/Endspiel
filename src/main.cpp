@@ -4,7 +4,7 @@
 
 int main()
 {
-	std::cout << "Chess Engine started\n\n";
+	std::cout << "Welcome to 'Zwischenzug'\n\n";
 
 	Board board;
 	board.init();

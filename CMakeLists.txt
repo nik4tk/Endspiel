@@ -11,4 +11,11 @@ add_executable(chess_engine
     src/main.cpp
     src/board.cpp
     src/movegen.cpp
- "include/move.h")
+    src/eval.cpp
+    src/search.cpp
+    include/move.h
+    include/board.h
+    include/movegen.h
+    include/eval.h
+    include/search.h
+)

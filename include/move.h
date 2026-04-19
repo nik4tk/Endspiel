@@ -21,4 +21,5 @@ struct Move {
     int piece;
     int capturePiece;
     int flags; // captures, en passant, castling, ect...
+    int promotionPiece;
 };

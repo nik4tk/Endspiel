@@ -39,6 +39,16 @@ void startUp()
     initKingMoves();
 }
 
+void promotions(MoveList& moves, int from, int to, int, int pawn, int captured)
+{
+    int flag = (captured != NO_PIECE) ? (PROMOTION | CAPTURE) : PROMOTION;
+    bool white = (pawn == WP);
+    moves.push({ from, to, pawn, captured, flag, white ? WQ : BQ });
+    moves.push({ from, to, pawn, captured, flag, white ? WR : BR });
+    moves.push({ from, to, pawn, captured, flag, white ? WB : BB });
+    moves.push({ from, to, pawn, captured, flag, white ? WN: BN });
+}
+
 void generateWhitePawnMoves(const Board& board, MoveList& moves)
 {
     u64 emptySquares = ~board.allPieces();
@@ -50,7 +60,8 @@ void generateWhitePawnMoves(const Board& board, MoveList& moves)
     {
         int to = get_LSB(singlePush);
         clear_bit(singlePush, to);
-        moves.push({ to - 8, to, WP, NO_PIECE, (to >= 56) ? PROMOTION : QUIET });
+        if (to >= A8) promotions(moves, to - 8, to, WP, NO_PIECE);
+        else moves.push({ to - 8, to, WP, NO_PIECE, QUIET });
     }
 
     // Double push
@@ -64,21 +75,34 @@ void generateWhitePawnMoves(const Board& board, MoveList& moves)
     }
 
     // Captures
-    // Left
     u64 capturesLeft = ((pawns << 7) & ~FILE_H) & board.blackPieces();
     while (capturesLeft)
     {
         int to = get_LSB(capturesLeft);
         clear_bit(capturesLeft, to);
-        moves.push({ to - 7, to , WP, board.getPieceOnSquare(to), (to >= 56) ? (CAPTURE | PROMOTION) : CAPTURE });
+        int captured = board.getPieceOnSquare(to);
+        if (to >= A8) promotions(moves, to - 7, to, WP, captured);
+        else moves.push({ to - 7, to , WP, captured, CAPTURE });
     }
-    // Right
+
     u64 capturesRight = ((pawns << 9) & ~FILE_A) & board.blackPieces();
     while (capturesRight)
     {
         int to = get_LSB(capturesRight);
         clear_bit(capturesRight, to);
-        moves.push({ to - 9, to , WP, board.getPieceOnSquare(to), (to >= 56) ? (CAPTURE | PROMOTION) : CAPTURE });
+        int captured = board.getPieceOnSquare(to);
+        if (to >= A8) promotions(moves, to - 9, to, WP, captured);
+        else moves.push({ to - 9, to , WP, captured, CAPTURE });
+    }
+
+    // En passant
+    if (board.enPassantSq != -1)
+    {
+        u64 epBB = 1ULL << board.enPassantSq;
+        u64 epLeft = ((pawns << 7 & ~FILE_H) & epBB);
+        u64 epRight = ((pawns << 9 & ~FILE_A) & epBB);
+        if (epLeft) moves.push({ board.enPassantSq - 7, board.enPassantSq, WP, BP, EN_PASSANT });
+        if (epRight) moves.push({ board.enPassantSq - 9, board.enPassantSq, WP, BP, EN_PASSANT });
     }
 }
 
@@ -93,7 +117,9 @@ void generateBlackPawnMoves(const Board& board, MoveList& moves)
     {
         int to = get_LSB(singlePush);
         clear_bit(singlePush, to);
-        moves.push({ to + 8, to, BP, NO_PIECE, (to <= 7) ? PROMOTION : QUIET });
+        if (to <= H1) promotions(moves, to + 8, to, BP, NO_PIECE);
+        else
+            moves.push({ to + 8, to, BP, NO_PIECE, QUIET });
     }
 
     // Double push
@@ -112,7 +138,9 @@ void generateBlackPawnMoves(const Board& board, MoveList& moves)
     {
         int to = get_LSB(capturesLeft);
         clear_bit(capturesLeft, to);
-        moves.push({ to + 7, to , board.getPieceOnSquare(to), (to <= 7) ? (CAPTURE | PROMOTION) : CAPTURE });
+        int captured = board.getPieceOnSquare(to);
+        if (to <= H1) promotions(moves, to + 9, to, BP, captured);
+        else moves.push({ to + 9, to, BP, captured, CAPTURE });
     }
 
     u64 capturesRight = ((pawns >> 7) & ~FILE_H) & board.whitePieces();
@@ -120,7 +148,19 @@ void generateBlackPawnMoves(const Board& board, MoveList& moves)
     {
         int to = get_LSB(capturesRight);
         clear_bit(capturesRight, to);
-        moves.push({ to + 9, to, board.getPieceOnSquare(to), (to <= 7) ? (CAPTURE | PROMOTION) : CAPTURE });
+        int captured = board.getPieceOnSquare(to);
+        if (to <= H1) promotions(moves, to + 7, to, BP, captured);
+        else moves.push({ to + 7, to, BP, captured, CAPTURE });
+    }
+
+    // En passant
+    if (board.enPassantSq != -1)
+    {
+        u64 epBB = 1ULL << board.enPassantSq;
+        u64 epLeft = ((pawns >> 9 & ~FILE_A) & epBB);
+        u64 epRight = ((pawns >> 7 & ~FILE_H) & epBB);
+        if (epLeft) moves.push({ board.enPassantSq + 9, board.enPassantSq, WP, BP, EN_PASSANT });
+        if (epRight) moves.push({ board.enPassantSq + 7, board.enPassantSq, WP, BP, EN_PASSANT });
     }
 }
 
