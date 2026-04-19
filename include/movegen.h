@@ -38,6 +38,8 @@ void initKingMoves();
 void generateWhiteKingMoves(const Board& board, MoveList& moves);
 void generateBlackKingMoves(const Board& board, MoveList& moves);
 
+static void generateSlidingMoves(const Board& board, MoveList& moves, u64 pieces, int pieceType, u64 ownPieces, u64 enemyPieces, const int* directions, int directionsAmount);
+
 void generateWhiteBishopMoves(const Board& board, MoveList& moves);
 void generateBlackBishopMoves(const Board& board, MoveList& moves);
 

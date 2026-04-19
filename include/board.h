@@ -40,6 +40,8 @@ public:
 	void init();
 	void print();
 
+	int getPieceOnSquare(int sq) const;
+
 	void makeMove(const Move& m);
 	void undoMove(const Move& m);
 };
