@@ -2,12 +2,12 @@
 #include "board.h"
 #include "move.h"
 
-inline u64 RANK_2 = 0ULL;
-inline u64 RANK_7 = 0ULL;
-inline u64 FILE_A = 0ULL;
-inline u64 FILE_H = 0ULL;
-inline u64 FILES_AB = 0ULL;
-inline u64 FILES_GH = 0ULL;
+const u64 RANK_2 = 0xFF00;
+const u64 RANK_7 = 0xFF000000000000;
+const u64 FILE_A = 0x0101010101010101;
+const u64 FILE_H = 0x8080808080808080;
+const u64 FILES_AB = 0x0303030303030303;
+const u64 FILES_GH = 0xC0C0C0C0C0C0C0C0;
 
 extern u64 KNIGHT_MOVES[64];
 extern u64 KING_MOVES[64];
@@ -57,7 +57,7 @@ MoveList generateWhiteLegalMoves(Board& board);
 MoveList generateBlackLegalMoves(Board& board);
 
 // King-safety
-bool isSquareAttacked(const Board& board, int sq);
+bool isSquareAttacked(const Board& board, int sq, bool byWhite);
 
 bool isCheckmate(Board& board);
 bool isStalemate(Board& board);
