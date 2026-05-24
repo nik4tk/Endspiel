@@ -43,6 +43,8 @@ void Board::init()
     historyCount = 0;
 
     whiteToMove = true;
+
+    hashKey = generateHash(*this);
 }
 
 void Board::print()
@@ -79,7 +81,15 @@ void Board::makeMove(const Move& m)
     u64 fromBB = 1ULL << m.from;
     u64 toBB = 1ULL << m.to;
 
-    history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq, whiteToMove };
+    history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq, whiteToMove, hashKey };
+
+    hashKey ^= sideKey;
+    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq % 8];
+    int oldCastle = (castleWK ? 1 : 0) | (castleWQ ? 2 : 0) | (castleBK ? 4 : 0) | (castleBQ ? 8 : 0);
+    hashKey ^= castleKeys[oldCastle];
+
+    hashKey ^= pieceKeys[m.piece][m.from];
+    hashKey ^= pieceKeys[m.piece][m.to];
 
     // Move the piece
     switch (m.piece)
@@ -102,6 +112,8 @@ void Board::makeMove(const Move& m)
     // Remove captured piece
     if (m.capturePiece != NO_PIECE)
     {
+        if (!(m.flags & EN_PASSANT)) hashKey ^= pieceKeys[m.capturePiece][m.to];
+
         switch (m.capturePiece)
         {
         case WP: whitePawns &= ~toBB; break;
@@ -123,28 +135,47 @@ void Board::makeMove(const Move& m)
     // En passant
     if (m.flags & EN_PASSANT)
     {
-        if (m.piece == WP) blackPawns &= ~(1ULL << (m.to - 8));
-        else whitePawns &= ~(1ULL << (m.to + 8));
+        if (m.piece == WP) {
+            blackPawns &= ~(1ULL << (m.to - 8));
+            hashKey ^= pieceKeys[BP][m.to - 8];
+        }
+        else {
+            whitePawns &= ~(1ULL << (m.to + 8));
+            hashKey ^= pieceKeys[WP][m.to + 8];
+        }
     }
 
     // Castling
     if (m.flags & CASTLING)
     {
-        if (m.piece == WK)
-        {
-            if (m.to == G1) { whiteRooks &= ~(1ULL << H1); whiteRooks |= (1ULL << F1); }
-            else { whiteRooks &= ~(1ULL << A1); whiteRooks |= (1ULL << D1); }
+        if (m.piece == WK) {
+            if (m.to == G1) {
+                whiteRooks &= ~(1ULL << H1); whiteRooks |= (1ULL << F1);
+                hashKey ^= pieceKeys[WR][H1]; hashKey ^= pieceKeys[WR][F1];
+            }
+            else {
+                whiteRooks &= ~(1ULL << A1); whiteRooks |= (1ULL << D1);
+                hashKey ^= pieceKeys[WR][A1]; hashKey ^= pieceKeys[WR][D1];
+            }
         }
-        else
-        {
-            if (m.to == G8) { blackRooks &= ~(1ULL << H8); blackRooks |= (1ULL << F8); }
-            else { blackRooks &= ~(1ULL << A8); blackRooks |= (1ULL << D8); }
+        else {
+            if (m.to == G8) {
+                blackRooks &= ~(1ULL << H8); blackRooks |= (1ULL << F8);
+                hashKey ^= pieceKeys[BR][H8]; hashKey ^= pieceKeys[BR][F8];
+            }
+            else {
+                blackRooks &= ~(1ULL << A8); blackRooks |= (1ULL << D8);
+                hashKey ^= pieceKeys[BR][A8]; hashKey ^= pieceKeys[BR][D8];
+            }
         }
     }
 
     // Promotion
     if (m.flags & PROMOTION)
     {
+        hashKey ^= pieceKeys[m.piece][m.to];
+        hashKey ^= pieceKeys[m.promotionPiece][m.to];
+
         if (m.piece == WP)
         {
             whitePawns &= ~toBB;
@@ -181,6 +212,10 @@ void Board::makeMove(const Move& m)
     if (m.flags & DOUBLE_PAWN) enPassantSq = (m.piece == WP) ? m.to - 8 : m.to + 8;
     else enPassantSq = -1;
 
+    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq % 8];
+    int newCastle = (castleWK ? 1 : 0) | (castleWQ ? 2 : 0) | (castleBK ? 4 : 0) | (castleBQ ? 8 : 0);
+    hashKey ^= castleKeys[newCastle];
+
     whiteToMove = !whiteToMove;
 }
 
@@ -196,6 +231,7 @@ void Board::undoMove(const Move& m)
     castleBQ = u.castleBQ;
     enPassantSq = u.enPassantSq;
     whiteToMove = u.whiteToMove;
+    hashKey = u.hashKey;
 
     // Undo promotion: remove promoted piece, restore pawn at from
     if (m.flags & PROMOTION)

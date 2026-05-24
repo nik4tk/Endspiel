@@ -3,6 +3,7 @@
 #include <bit>
 
 #include "move.h"
+#include "hash.h"
 
 using u64 = uint64_t;
 
@@ -27,6 +28,7 @@ struct UndoState {
 	bool castleWK, castleWQ, castleBK, castleBQ;
 	int enPassantSq;
 	bool whiteToMove;
+	u64 hashKey;
 };
 
 class Board
@@ -36,9 +38,10 @@ public:
 	u64 blackPawns, blackKnights, blackBishops, blackRooks, blackQueens, blackKing;
 
 	// Game state
-	bool whiteToMove;
 	bool castleWK, castleWQ, castleBK, castleBQ;
 	int enPassantSq; // -1 if none, otherwise the square a pawn can capture to
+	bool whiteToMove;
+	u64 hashKey;
 
 	// History for undoMove
 	UndoState history[512];

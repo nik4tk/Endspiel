@@ -18,4 +18,4 @@ add_executable(Endspiel
     include/movegen.h
     include/eval.h
     include/search.h
- "src/performanceTest.cpp" "include/performanceTest.h")
+ "src/performanceTest.cpp" "include/performanceTest.h" "include/hash.h" "src/hash.cpp")
