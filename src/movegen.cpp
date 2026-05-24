@@ -515,7 +515,7 @@ bool isCheckmate(Board& board)
     MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
     if (moves.count != 0) return false;
     int kingSq = get_LSB(board.whiteToMove ? board.whiteKing : board.blackKing);
-    return isSquareAttacked(board, kingSq, false);
+    return isSquareAttacked(board, kingSq, !board.whiteToMove);
 }
 
 bool isStalemate(Board& board)
@@ -523,5 +523,5 @@ bool isStalemate(Board& board)
     MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
     if (moves.count != 0) return false;
     int kingSq = get_LSB(board.whiteToMove ? board.whiteKing : board.blackKing);
-    return !isSquareAttacked(board, kingSq, true);
+    return !isSquareAttacked(board, kingSq, !board.whiteToMove);
 }

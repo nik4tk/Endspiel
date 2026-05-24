@@ -37,7 +37,7 @@ void uciLoop()
 	board.init();
 	std::string line;
 
-	std::cout << "Zwischenzug UCI active. Waiting for GUI..." << std::endl;
+	std::cout << "Endspiel UCI active. Waiting for GUI..." << std::endl;
 
 	while (std::getline(std::cin, line))
 	{
@@ -47,8 +47,8 @@ void uciLoop()
 
 		if (command == "uci")
 		{
-			std::cout << "id name Zwischenzug" << std::endl;
-			std::cout << "id author nik4tk" << std::endl;
+			std::cout << "id name Endspiel 01" << std::endl;
+			std::cout << "id author Nikita Shirobokov" << std::endl;
 			std::cout << "uciok" << std::endl;
 		}
 		else if (command == "isready")
