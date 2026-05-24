@@ -18,4 +18,4 @@ add_executable(chess_engine
     include/movegen.h
     include/eval.h
     include/search.h
-)
+ "src/performanceTest.cpp" "include/performanceTest.h")

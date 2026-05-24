@@ -39,7 +39,7 @@ void startUp()
     initKingMoves();
 }
 
-void promotions(MoveList& moves, int from, int to, int, int pawn, int captured)
+void promotions(MoveList& moves, int from, int to, int pawn, int captured)
 {
     int flag = (captured != NO_PIECE) ? (PROMOTION | CAPTURE) : PROMOTION;
     bool white = (pawn == WP);
@@ -159,8 +159,8 @@ void generateBlackPawnMoves(const Board& board, MoveList& moves)
         u64 epBB = 1ULL << board.enPassantSq;
         u64 epLeft = ((pawns >> 9 & ~FILE_A) & epBB);
         u64 epRight = ((pawns >> 7 & ~FILE_H) & epBB);
-        if (epLeft) moves.push({ board.enPassantSq + 9, board.enPassantSq, WP, BP, EN_PASSANT });
-        if (epRight) moves.push({ board.enPassantSq + 7, board.enPassantSq, WP, BP, EN_PASSANT });
+        if (epLeft) moves.push({ board.enPassantSq + 9, board.enPassantSq, BP, WP, EN_PASSANT });
+        if (epRight) moves.push({ board.enPassantSq + 7, board.enPassantSq, BP, WP, EN_PASSANT });
     }
 }
 
@@ -194,7 +194,7 @@ void generateWhiteKnightMoves(const Board& board, MoveList& moves)
             int to = get_LSB(captures);
             clear_bit(captures, to);
             int captured = board.getPieceOnSquare(to);
-            moves.push({ from, to, WN, captured, captured != NO_PIECE ? CAPTURE : QUIET });
+            moves.push({ from, to, WN, captured, captured == NO_PIECE ? QUIET : CAPTURE });
         }
     }
 }
@@ -212,7 +212,7 @@ void generateBlackKnightMoves(const Board& board, MoveList& moves)
             int to = get_LSB(captures);
             clear_bit(captures, to);
             int captured = board.getPieceOnSquare(to);
-            moves.push({ from, to, BN, captured, captured != NO_PIECE ? CAPTURE : QUIET });
+            moves.push({ from, to, BN, captured, captured == NO_PIECE ? QUIET : CAPTURE });
         }
     }
 }
@@ -243,7 +243,26 @@ void generateWhiteKingMoves(const Board& board, MoveList& moves)
         int to = get_LSB(captures);
         clear_bit(captures, to);
         int captured = board.getPieceOnSquare(to);
-        moves.push({ from, to, WK, captured, captured != NO_PIECE ? CAPTURE : QUIET });
+        moves.push({ from, to, WK, captured, captured == NO_PIECE ? QUIET : CAPTURE });
+    }
+
+    if (board.castleWK)
+    {
+        u64 occ = board.allPieces();
+        if (!(occ & ((1ULL << F1) | (1ULL << G1))))
+            if (!isSquareAttacked(board, E1, false) && !isSquareAttacked(board, F1, false) && !isSquareAttacked(board, G1, false))
+            {
+                moves.push({ E1, G1, WK, NO_PIECE, CASTLING });
+            }
+    }
+    if (board.castleWQ)
+    {
+        u64 occ = board.allPieces();
+        if (!(occ & ((1ULL << B1) | (1ULL << C1) | (1ULL << D1))))
+            if (!isSquareAttacked(board, E1, false) && !isSquareAttacked(board, D1, false) && !isSquareAttacked(board, C1, false))
+            {
+                moves.push({ E1, C1, WK, NO_PIECE, CASTLING });
+            }
     }
 }
 
@@ -257,6 +276,25 @@ void generateBlackKingMoves(const Board& board, MoveList& moves)
         clear_bit(captures, to);
         int captured = board.getPieceOnSquare(to);
         moves.push({ from, to, BK, captured, captured != NO_PIECE ? CAPTURE : QUIET });
+    }
+
+    if (board.castleBK)
+    {
+        u64 occ = board.allPieces();
+        if (!(occ & ((1ULL << F8) | (1ULL << G8))))
+            if (!isSquareAttacked(board, E8, true) && !isSquareAttacked(board, F8, true) && !isSquareAttacked(board, G8, true))
+            {
+                moves.push({ E8, G8, BK, NO_PIECE, CASTLING });
+            }
+    }
+    if (board.castleBQ)
+    {
+        u64 occ = board.allPieces();
+        if (!(occ & ((1ULL << B8) | (1ULL << C8) | (1ULL << D8))))
+            if (!isSquareAttacked(board, E8, true) && !isSquareAttacked(board, D8, true) && !isSquareAttacked(board, C8, true))
+            {
+                moves.push({ E8, C8, BK, NO_PIECE, CASTLING });
+            }
     }
 }
 
@@ -350,37 +388,39 @@ MoveList generatePseudoMoves(const Board& board, bool whiteToMove)
     return pseudo;
 }
 
-MoveList generateWhiteLegalMoves(const Board& board)
+MoveList generateWhiteLegalMoves(Board& board)
 {
     MoveList pseudo = generatePseudoMoves(board, true);
     MoveList legal;
 
     for (const Move& m : pseudo)
     {
-        Board copy = board;
-        copy.makeMove(m);
+        board.makeMove(m);
 
-        int kingSq = get_LSB(copy.whiteKing);
+        int kingSq = get_LSB(board.whiteKing);
 
-        if (!isSquareAttacked(copy, kingSq, false)) legal.push(m); // Check if white king is attacked by black (byWhite = false)
+        if (!isSquareAttacked(board, kingSq, false)) legal.push(m); // Check if white king is attacked by black (byWhite = false)
+
+        board.undoMove(m);
     }
 
     return legal;
 }
 
-MoveList generateBlackLegalMoves(const Board& board)
+MoveList generateBlackLegalMoves(Board& board)
 {
     MoveList pseudo = generatePseudoMoves(board, false);
     MoveList legal;
 
     for (const Move& m : pseudo)
     {
-        Board copy = board;
-        copy.makeMove(m);
+        board.makeMove(m);
 
-        int kingSq = get_LSB(copy.blackKing);
+        int kingSq = get_LSB(board.blackKing);
 
-        if (!isSquareAttacked(copy, kingSq, true)) legal.push(m); // Check if black king is attacked by white (byWhite = true)
+        if (!isSquareAttacked(board, kingSq, true)) legal.push(m); // Check if black king is attacked by white (byWhite = true)
+
+        board.undoMove(m);
     }
 
     return legal;
@@ -435,7 +475,7 @@ bool isSquareAttacked(const Board& board, int sq, bool byWhite)
     }
 
     // Right
-    for (int s = sq + 1; s % 8 != 7; s += 1)
+    for (int s = sq + 1; s % 8 != 0; s += 1)
     {
         if (occupied & (1ULL << s))
         {
@@ -445,7 +485,7 @@ bool isSquareAttacked(const Board& board, int sq, bool byWhite)
     }
 
     // Left
-    for (int s = sq - 1; s % 8 != 0; s -= 1)
+    for (int s = sq - 1; s % 8 != 7 && s >= 0; s -= 1)
     {
         if (occupied & (1ULL << s))
         {
@@ -458,7 +498,7 @@ bool isSquareAttacked(const Board& board, int sq, bool byWhite)
     u64 dPieces = byWhite ? board.whiteBishops | board.whiteQueens : board.blackBishops | board.blackQueens;
 
     // Up-Right
-    for (int s = sq + 9; s < 64 && s % 8 != 7; s += 9)
+    for (int s = sq + 9; s < 64 && s % 8 != 0; s += 9)
     {
         if (occupied & (1ULL << s))
         {
@@ -468,7 +508,7 @@ bool isSquareAttacked(const Board& board, int sq, bool byWhite)
     }
 
     // Up-Left
-    for (int s = sq + 7; s < 64 && s % 8 != 0; s += 7)
+    for (int s = sq + 7; s < 64 && s % 8 != 7; s += 7)
     {
         if (occupied & (1ULL << s))
         {
@@ -478,16 +518,6 @@ bool isSquareAttacked(const Board& board, int sq, bool byWhite)
     }
 
     // Down-Right
-    for (int s = sq - 9; s >= 0 && s % 8 != 7; s -= 9)
-    {
-        if (occupied & (1ULL << s))
-        {
-            if (dPieces & (1ULL << s)) return true;
-            break;
-        }
-    }
-
-    // Down-Left
     for (int s = sq - 7; s >= 0 && s % 8 != 0; s -= 7)
     {
         if (occupied & (1ULL << s))
@@ -497,5 +527,31 @@ bool isSquareAttacked(const Board& board, int sq, bool byWhite)
         }
     }
 
+    // Down-Left
+    for (int s = sq - 9; s >= 0 && s % 8 != 7; s -= 9)
+    {
+        if (occupied & (1ULL << s))
+        {
+            if (dPieces & (1ULL << s)) return true;
+            break;
+        }
+    }
+
     return false;
+}
+
+bool isCheckmate(Board& board, bool whiteToMove)
+{
+    MoveList moves = whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
+    if (moves.count != 0) return false;
+    int kingSq = get_LSB(whiteToMove ? board.whiteKing : board.blackKing);
+    return isSquareAttacked(board, kingSq, !whiteToMove);
+}
+
+bool isStalemate(Board& board, bool whiteToMove)
+{
+    MoveList moves = whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
+    if (moves.count != 0) return false;
+    int kingSq = get_LSB(whiteToMove ? board.whiteKing : board.blackKing);
+    return !isSquareAttacked(board, kingSq, !whiteToMove);
 }

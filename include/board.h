@@ -22,6 +22,7 @@ enum Square {
 	A8, B8, C8, D8, E8, F8, G8, H8
 };
 
+// Saved before each makeMove so undoMove can restore exactly
 struct UndoState {
 	bool castleWK, castleWQ, castleBK, castleBQ;
 	int enPassantSq;
@@ -43,9 +44,7 @@ public:
 
 	// helper-fnct
 	u64 whitePieces() const { return whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing; }
-
 	u64 blackPieces() const { return blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing; }
-
 	u64 allPieces() const { return whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing | blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing; }
 
 	int getPieceOnSquare(int sq) const;

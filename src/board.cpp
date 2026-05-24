@@ -77,6 +77,8 @@ void Board::makeMove(const Move& m)
     u64 fromBB = 1ULL << m.from;
     u64 toBB = 1ULL << m.to;
 
+    history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq };
+
     // Move the piece
     switch (m.piece)
     {
@@ -183,27 +185,27 @@ void Board::undoMove(const Move& m)
     u64 fromBB = 1ULL << m.from;
     u64 toBB = 1ULL << m.to;
 
-    UndoState& u = history[historyCount--];
+    UndoState& u = history[--historyCount];
     castleWK = u.castleWK;
     castleWQ = u.castleWQ;
     castleBK = u.castleBK;
     castleBQ = u.castleBQ;
     enPassantSq = u.enPassantSq;
 
-    // Undo promotion first: remove promoted piece, restore pawn at from
+    // Undo promotion: remove promoted piece, restore pawn at from
     if (m.flags & PROMOTION)
     {
         switch (m.promotionPiece)
         {
-        case WQ: whiteQueens |= toBB; break;
-        case WR: whiteRooks |= toBB; break;
-        case WB: whiteBishops |= toBB; break;
-        case WN: whiteKnights |= toBB; break;
+        case WQ: whiteQueens &= ~toBB; break;
+        case WR: whiteRooks &= ~toBB; break;
+        case WB: whiteBishops &= ~toBB; break;
+        case WN: whiteKnights &= ~toBB; break;
 
-        case BQ: blackQueens |= toBB; break;
-        case BR: blackRooks |= toBB; break;
-        case BB: blackBishops |= toBB; break;
-        case BN: blackKnights |= toBB; break;
+        case BQ: blackQueens &= ~toBB; break;
+        case BR: blackRooks &= ~toBB; break;
+        case BB: blackBishops &= ~toBB; break;
+        case BN: blackKnights &= ~toBB; break;
         }
         if (m.piece == WP) whitePawns |= fromBB;
         else blackPawns |= fromBB;
@@ -228,8 +230,8 @@ void Board::undoMove(const Move& m)
         }
     }
 
-    // Restore captured piece at 'to'
-    if (m.capturePiece != NO_PIECE)
+    // Restore captured piece at 'to' (unless it was en passant)
+    if (m.capturePiece != NO_PIECE && !(m.flags & EN_PASSANT))
     {
         switch (m.capturePiece)
         {

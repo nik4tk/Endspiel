@@ -13,7 +13,7 @@ extern u64 KNIGHT_MOVES[64];
 extern u64 KING_MOVES[64];
 
 struct MoveList {
-	Move moves[256]; // 218, because a normal chess-position only has ~218 legal moves
+	Move moves[256]{}; // 218, because a normal chess-position only has ~218 legal moves
 	int count = 0;
 
 	Move* begin() { return moves; }
@@ -27,7 +27,7 @@ struct MoveList {
 void startUp();
 
 // General moves
-static void promotions(MoveList& moves, int from, int, int pawn, int captured);
+static void promotions(MoveList& moves, int from, int to, int pawn, int captured);
 
 void generateWhitePawnMoves(const Board& board, MoveList& moves);
 void generateBlackPawnMoves(const Board& board, MoveList& moves);
@@ -53,8 +53,11 @@ void generateBlackQueenMoves(const Board& board, MoveList& moves);
 
 // Generate all pseudo/legal-moves
 MoveList generatePseudoMoves(const Board& board, bool whiteToMove);
-MoveList generateWhiteLegalMoves(const Board& board);
-MoveList generateBlackLegalMoves(const Board& board);
+MoveList generateWhiteLegalMoves(Board& board);
+MoveList generateBlackLegalMoves(Board& board);
 
 // King-safety
 bool isSquareAttacked(const Board& board, int sq, bool byWhite);
+
+bool isCheckmate(Board& board, bool whiteToMove);
+bool isStalemate(Board& board, bool whiteToMove);
