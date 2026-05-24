@@ -26,6 +26,7 @@ enum Square {
 struct UndoState {
 	bool castleWK, castleWQ, castleBK, castleBQ;
 	int enPassantSq;
+	bool whiteToMove;
 };
 
 class Board
@@ -35,6 +36,7 @@ public:
 	u64 blackPawns, blackKnights, blackBishops, blackRooks, blackQueens, blackKing;
 
 	// Game state
+	bool whiteToMove;
 	bool castleWK, castleWQ, castleBK, castleBQ;
 	int enPassantSq; // -1 if none, otherwise the square a pawn can capture to
 

@@ -52,12 +52,12 @@ void generateWhiteQueenMoves(const Board& board, MoveList& moves);
 void generateBlackQueenMoves(const Board& board, MoveList& moves);
 
 // Generate all pseudo/legal-moves
-MoveList generatePseudoMoves(const Board& board, bool whiteToMove);
+MoveList generatePseudoMoves(const Board& board);
 MoveList generateWhiteLegalMoves(Board& board);
 MoveList generateBlackLegalMoves(Board& board);
 
 // King-safety
-bool isSquareAttacked(const Board& board, int sq, bool byWhite);
+bool isSquareAttacked(const Board& board, int sq);
 
-bool isCheckmate(Board& board, bool whiteToMove);
-bool isStalemate(Board& board, bool whiteToMove);
+bool isCheckmate(Board& board);
+bool isStalemate(Board& board);

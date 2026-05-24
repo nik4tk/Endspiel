@@ -41,6 +41,8 @@ void Board::init()
     castleWK = castleWQ = castleBK = castleBQ = true;
     enPassantSq = -1;
     historyCount = 0;
+
+    whiteToMove = true;
 }
 
 void Board::print()
@@ -77,7 +79,7 @@ void Board::makeMove(const Move& m)
     u64 fromBB = 1ULL << m.from;
     u64 toBB = 1ULL << m.to;
 
-    history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq };
+    history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq, whiteToMove };
 
     // Move the piece
     switch (m.piece)
@@ -178,6 +180,8 @@ void Board::makeMove(const Move& m)
 
     if (m.flags & DOUBLE_PAWN) enPassantSq = (m.piece == WP) ? m.to - 8 : m.to + 8;
     else enPassantSq = -1;
+
+    whiteToMove = !whiteToMove;
 }
 
 void Board::undoMove(const Move& m)
@@ -191,6 +195,7 @@ void Board::undoMove(const Move& m)
     castleBK = u.castleBK;
     castleBQ = u.castleBQ;
     enPassantSq = u.enPassantSq;
+    whiteToMove = u.whiteToMove;
 
     // Undo promotion: remove promoted piece, restore pawn at from
     if (m.flags & PROMOTION)

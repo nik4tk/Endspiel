@@ -18,6 +18,7 @@ u64 perft(Board& board, int depth, bool whiteToMove)
 	{
 		board.makeMove(m);
 		nodes += perft(board, depth - 1, !whiteToMove);
+		board.undoMove(m);
 	}
 
 	return nodes;
@@ -39,14 +40,14 @@ void perftDivide(Board& board, int depth, bool whiteToMove)
 		u64 nodes = perft(board, depth - 1, !whiteToMove);
 		board.undoMove(m);
 
-		std::cout << squareToString(m.from) << squareToString(m.to) << ": " << nodes << std::endl;
+		std::cout << squareToString(m.from) << squareToString(m.to) << ": " << nodes << "\n";
 		totalNodes += nodes;
 	}
 
 	auto endTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = endTime - startTime;
 
-	std::cout << "\nTotal Nodes: " << totalNodes << std::endl;
+	std::cout << "\nTotal Nodes: " << totalNodes << "\n";
 	std::cout << "\nTime taken: " << elapsed.count() << " seconds\n";
-	std::cout << "\nNodes/sec: " << (totalNodes / elapsed.count()) << std::endl;
+	std::cout << "\nNodes/sec: " << (totalNodes / elapsed.count()) << "\n\n";
 }

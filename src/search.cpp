@@ -4,25 +4,25 @@
 const int CHECKMATE = 100000;
 const int STALEMATE = 0;
 
-int minimax(Board& board, int depth, int alpha, int beta, bool whiteToMove)
+int minimax(Board& board, int depth, int alpha, int beta)
 {
     if (depth == 0) return evaluate(board);
 
-    MoveList moves = whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
+    MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
 
     if (moves.count == 0)
     {
-        if (isCheckmate(board, whiteToMove)) return whiteToMove ? -CHECKMATE : CHECKMATE;
+        if (isCheckmate(board)) return board.whiteToMove ? -CHECKMATE : CHECKMATE;
         return STALEMATE;
     }
 
-    if (whiteToMove)
+    if (board.whiteToMove)
     {
         int maxScore = -1000000;
         for (const Move& m : moves)
         {
             board.makeMove(m);
-            int score = minimax(board, depth - 1, alpha, beta, false);
+            int score = minimax(board, depth - 1, alpha, beta);
             board.undoMove(m);
             maxScore = std::max(maxScore, score);
             alpha = std::max(alpha, score);
@@ -36,7 +36,7 @@ int minimax(Board& board, int depth, int alpha, int beta, bool whiteToMove)
         for (const Move& m : moves)
         {
             board.makeMove(m);
-            int score = minimax(board, depth - 1, alpha, beta, true);
+            int score = minimax(board, depth - 1, alpha, beta);
             board.undoMove(m);
             minScore = std::min(minScore, score);
             beta = std::min(beta, score);
@@ -46,19 +46,19 @@ int minimax(Board& board, int depth, int alpha, int beta, bool whiteToMove)
     }
 }
 
-Move bestMove(Board& board, int depth, bool whiteToMove)
+Move bestMove(Board& board, int depth)
 {
-    MoveList moves = whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
+    MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
     Move best;
-    int bestScore = whiteToMove ? -1000000 : 1000000;
+    int bestScore = board.whiteToMove ? -1000000 : 1000000;
 
     for (const Move& m : moves)
     {
         board.makeMove(m);
-        int score = minimax(board, depth - 1, -1000000, 1000000, !whiteToMove);
+        int score = minimax(board, depth - 1, -1000000, 1000000);
         board.undoMove(m);
 
-        if (whiteToMove)
+        if (board.whiteToMove)
         {
             if (score > bestScore)
             {
