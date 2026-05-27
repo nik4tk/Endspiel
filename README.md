@@ -34,7 +34,7 @@ Endspiel uses CMake for easy cross-platform compilation. To build the executable
    cmake --build . --config Release
 (Note: Always build in Release mode! Chess engines run significantly slower in Debug mode due to unoptimized search trees).
 
-### How to Play Against Endspiel
+## How to Play Against Endspiel
 Endspiel is a command-line program that communicates via the UCI protocol. To play against it, you need a Chess GUI.
 1. Download a free UCI-compatible GUI like Arena Chess GUI or CuteChess
 2. Go to engines > install engine (or equivalent in your GUI)
