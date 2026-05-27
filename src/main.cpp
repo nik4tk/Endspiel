@@ -7,7 +7,7 @@
 #include <string>
 #include <sstream>
 
-Move parseMove(Board& board, std::string moveString)
+Move parseMove(Board& board, const std::string moveString)
 {
 	MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
 
@@ -19,7 +19,8 @@ Move parseMove(Board& board, std::string moveString)
 		char toRank = '1' + (m.to / 8);
 		std::string mStr = { fromFile, fromRank, toFile, toRank };
 
-		if (m.flags & PROMOTION) {
+		if (m.flags & PROMOTION)
+		{
 			if (m.promotionPiece == WQ || m.promotionPiece == BQ) mStr += 'q';
 			else if (m.promotionPiece == WR || m.promotionPiece == BR) mStr += 'r';
 			else if (m.promotionPiece == WB || m.promotionPiece == BB) mStr += 'b';
@@ -51,17 +52,13 @@ void uciLoop()
 			std::cout << "id author Nikita Shirobokov" << std::endl;
 			std::cout << "uciok" << std::endl;
 		}
-		else if (command == "isready")
+		else if (command == "isready") std::cout << "readyok" << std::endl;
+		else if (command == "position")
 		{
-			std::cout << "readyok" << std::endl;
-		}
-		else if (command == "position") {
 			std::string subCommand;
 			iss >> subCommand;
 
-			if (subCommand == "startpos") {
-				board.init(); // Reset board
-			}
+			if (subCommand == "startpos") board.init(); // Reset board
 
 			iss >> subCommand; // Check if the word "moves" is next
 			if (subCommand == "moves") {
@@ -93,10 +90,7 @@ void uciLoop()
 			}
 			std::cout << std::endl;
 		}
-		else if (command == "quit")
-		{
-			break;
-		}
+		else if (command == "quit") break;
 	}
 }
 

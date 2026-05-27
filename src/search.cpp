@@ -22,7 +22,8 @@ void storeTT(u64 hash, int depth, int flag, int score, Move bestMove)
 {
     int index = hash % TT_SIZE;
 
-    if (TT[index].hashKey == 0 || TT[index].depth <= depth) {
+    if (TT[index].hashKey == 0 || TT[index].depth <= depth)
+    {
         TT[index].hashKey = hash;
         TT[index].depth = depth;
         TT[index].flag = flag;
@@ -31,24 +32,30 @@ void storeTT(u64 hash, int depth, int flag, int score, Move bestMove)
     }
 }
 
-bool probeTT(u64 hash, int depth, int alpha, int beta, int& returnScore, Move& returnMove) {
+bool probeTT(u64 hash, int depth, int alpha, int beta, int& returnScore, Move& returnMove)
+{
     int index = hash % TT_SIZE;
     TTEntry entry = TT[index];
 
-    if (entry.hashKey == hash) {
+    if (entry.hashKey == hash)
+    {
         returnMove = entry.bestMove;
 
-        if (entry.depth >= depth) {
-            if (entry.flag == TT_EXACT) {
+        if (entry.depth >= depth)
+        {
+            if (entry.flag == TT_EXACT)
+            {
                 returnScore = entry.score;
                 return true;
             }
-            if (entry.flag == TT_ALPHA && entry.score <= alpha) {
-                returnScore = alpha;
+            if (entry.flag == TT_ALPHA && entry.score <= alpha)
+            {
+                returnScore = entry.score;
                 return true;
             }
-            if (entry.flag == TT_BETA && entry.score >= beta) {
-                returnScore = beta;
+            if (entry.flag == TT_BETA && entry.score >= beta)
+            {
+                returnScore = entry.score;
                 return true;
             }
         }
@@ -56,20 +63,24 @@ bool probeTT(u64 hash, int depth, int alpha, int beta, int& returnScore, Move& r
     return false;
 }
 
+int getPieceValue(int piece)
+{
+    if (piece == 1 || piece == 7) return VAL_PAWN;
+    if (piece == 2 || piece == 8) return VAL_KNIGHT;
+    if (piece == 3 || piece == 9) return VAL_BISHOP;
+    if (piece == 4 || piece == 10) return VAL_ROOK;
+    if (piece == 5 || piece == 11) return VAL_QUEEN;
+    return 0;
+}
+
 int scoreMove(const Move& m)
 {
     int score = 0;
-
     if (m.flags & CAPTURE)
     {
-        score = 1000 + (100 * m.capturePiece) - m.piece;
+        score = 1000 + getPieceValue(m.capturePiece) - getPieceValue(m.piece);
     }
-
-    if (m.flags & PROMOTION)
-    {
-        score += 900;
-    }
-
+    if (m.flags & PROMOTION) score += 900;
     return score;
 }
 
@@ -79,9 +90,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
 
     int ttScore;
     Move ttMove;
-    if (probeTT(board.hashKey, depth, alpha, beta, ttScore, ttMove)) {
-        return ttScore;
-    }
+    if (probeTT(board.hashKey, depth, alpha, beta, ttScore, ttMove)) return ttScore;
 
     MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
 
@@ -96,8 +105,8 @@ int minimax(Board& board, int depth, int alpha, int beta)
         return STALEMATE;
     }
 
+    Move bestMoveFound = { -1, -1, 0, 0, 0, 0 }; // <--- Initialize this!
     int flag = TT_ALPHA;
-    Move bestMoveFound;
 
     if (board.whiteToMove)
     {
@@ -120,7 +129,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
             }
             if (alpha >= beta)
             {
-                storeTT(board.hashKey, depth, TT_BETA, beta, m);
+                flag = TT_BETA;
                 break;
             }
         }
@@ -130,6 +139,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
     else
     {
         int minScore = 1000000;
+        flag = TT_BETA;
         for (const Move& m : moves)
         {
             board.makeMove(m);
@@ -148,7 +158,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
             }
             if (alpha >= beta)
             {
-                storeTT(board.hashKey, depth, TT_ALPHA, alpha, m);
+                flag = TT_ALPHA;
                 break;
             }
         }
@@ -159,33 +169,51 @@ int minimax(Board& board, int depth, int alpha, int beta)
 
 Move bestMove(Board& board, int depth)
 {
+    clearTT();
     MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
-    Move best;
-    int bestScore = board.whiteToMove ? -1000000 : 1000000;
 
-    for (const Move& m : moves)
+    std::sort(moves.begin(), moves.end(), [](const Move& a, const Move& b)
     {
-        board.makeMove(m);
-        int score = minimax(board, depth - 1, -1000000, 1000000);
-        board.undoMove(m);
+        return scoreMove(a) > scoreMove(b);
+    });
 
-        if (board.whiteToMove)
+    Move best = { -1, -1, 0, 0, 0, 0 };
+    int alpha = -1000000;
+    int beta = 1000000;
+
+    if (board.whiteToMove)
         {
-            if (score > bestScore)
+        int bestScore = -1000000;
+        for (const Move& m : moves)
+        {
+            board.makeMove(m);
+            int score = minimax(board, depth - 1, alpha, beta);
+            board.undoMove(m);
+
+            if (score > bestScore || best.from == -1)
             {
                 bestScore = score;
                 best = m;
             }
-        }
-        else
-        {
-            if (score < bestScore)
-            {
-                bestScore = score;
-                best = m;
-            }
+            alpha = std::max(alpha, bestScore);
         }
     }
+    else
+    {
+        int bestScore = 1000000;
+        for (const Move& m : moves)
+        {
+            board.makeMove(m);
+            int score = minimax(board, depth - 1, alpha, beta);
+            board.undoMove(m);
 
+            if (score < bestScore || best.from == -1)
+            {
+                bestScore = score;
+                best = m;
+            }
+            beta = std::min(beta, bestScore);
+        }
+    }
     return best;
 }

@@ -7,6 +7,7 @@ void startUp()
 {
     initKnightMoves();
     initKingMoves();
+    initZobrist();
 }
 
 void promotions(MoveList& moves, int from, int to, int pawn, int captured)
