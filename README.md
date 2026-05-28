@@ -1,6 +1,6 @@
 # ♞ Endspiel 01
 
-**Endspiel** (German for *"Endgame"*) is a fast, custom-built, UCI-compatible chess engine written from scratch in modern C++.
+**Endspiel** (German for *"Endgame"*) is a moderatly fast (for now), custom-built, UCI-compatible chess engine written from scratch in modern C++.
 
 Designed with a focus on bitwise optimization and aggressive tactical search, Endspiel utilizes 64-bit integers (Bitboards) to represent the board state, allowing for lightning-fast move generation and evaluation.
 
