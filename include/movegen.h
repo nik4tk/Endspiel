@@ -1,6 +1,7 @@
 #pragma once
 #include "board.h"
 #include "move.h"
+#include "hash.h"
 
 const u64 RANK_2 = 0xFF00;
 const u64 RANK_7 = 0xFF000000000000;
@@ -19,7 +20,7 @@ struct MoveList {
 	Move* begin() { return moves; }
 	Move* end() { return moves + count; }
 	const Move* begin() const { return moves; }
-	const Move* end() const { return moves + count;	}
+	const Move* end() const { return moves + count; }
 
 	void push(Move m) { if (count < 256) moves[count++] = m; }
 };

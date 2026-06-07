@@ -54,7 +54,7 @@ public:
 	int getPieceOnSquare(int sq) const;
 
 	void init();
-	void print();
+	void print() const;
 	void makeMove(const Move& m);
 	void undoMove(const Move& m);
 };

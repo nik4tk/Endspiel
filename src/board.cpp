@@ -48,7 +48,7 @@ void Board::init()
     hashKey = generateHash(*this);
 }
 
-void Board::print()
+void Board::print() const
 {
     for (int rank = 7; rank >= 0; rank--)
     {
@@ -85,7 +85,7 @@ void Board::makeMove(const Move& m)
     history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq, whiteToMove, hashKey };
 
     hashKey ^= sideKey;
-    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq & 7];
+    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq % 8];
     int oldCastle = (castleWK ? 1 : 0) | (castleWQ ? 2 : 0) | (castleBK ? 4 : 0) | (castleBQ ? 8 : 0);
     hashKey ^= castleKeys[oldCastle];
 
@@ -136,11 +136,13 @@ void Board::makeMove(const Move& m)
     // En passant
     if (m.flags & EN_PASSANT)
     {
-        if (m.piece == WP) {
+        if (m.piece == WP)
+        {
             blackPawns &= ~(1ULL << (m.to - 8));
             hashKey ^= pieceKeys[BP][m.to - 8];
         }
-        else {
+        else
+        {
             whitePawns &= ~(1ULL << (m.to + 8));
             hashKey ^= pieceKeys[WP][m.to + 8];
         }
@@ -149,22 +151,28 @@ void Board::makeMove(const Move& m)
     // Castling
     if (m.flags & CASTLING)
     {
-        if (m.piece == WK) {
-            if (m.to == G1) {
+        if (m.piece == WK)
+        {
+            if (m.to == G1)
+            {
                 whiteRooks &= ~(1ULL << H1); whiteRooks |= (1ULL << F1);
                 hashKey ^= pieceKeys[WR][H1]; hashKey ^= pieceKeys[WR][F1];
             }
-            else {
+            else
+            {
                 whiteRooks &= ~(1ULL << A1); whiteRooks |= (1ULL << D1);
                 hashKey ^= pieceKeys[WR][A1]; hashKey ^= pieceKeys[WR][D1];
             }
         }
-        else {
-            if (m.to == G8) {
+        else
+        {
+            if (m.to == G8)
+            {
                 blackRooks &= ~(1ULL << H8); blackRooks |= (1ULL << F8);
                 hashKey ^= pieceKeys[BR][H8]; hashKey ^= pieceKeys[BR][F8];
             }
-            else {
+            else
+            {
                 blackRooks &= ~(1ULL << A8); blackRooks |= (1ULL << D8);
                 hashKey ^= pieceKeys[BR][A8]; hashKey ^= pieceKeys[BR][D8];
             }
@@ -193,7 +201,7 @@ void Board::makeMove(const Move& m)
             blackPawns &= ~toBB;
             switch (m.promotionPiece)
             {
-            case BQ: blackQueens|= toBB; break;
+            case BQ: blackQueens |= toBB; break;
             case BR: blackRooks |= toBB; break;
             case BB: blackBishops |= toBB; break;
             case BN: blackKnights |= toBB; break;
@@ -213,7 +221,7 @@ void Board::makeMove(const Move& m)
     if (m.flags & DOUBLE_PAWN) enPassantSq = (m.piece == WP) ? m.to - 8 : m.to + 8;
     else enPassantSq = -1;
 
-    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq & 7];
+    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq % 8];
     int newCastle = (castleWK ? 1 : 0) | (castleWQ ? 2 : 0) | (castleBK ? 4 : 0) | (castleBQ ? 8 : 0);
     hashKey ^= castleKeys[newCastle];
 

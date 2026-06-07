@@ -12,7 +12,7 @@ int evaluate(const Board& board)
         score += 100 + PawnTable[sq];
         clear_bit(wp, sq);
     }
-    
+
     u64 wn = board.whiteKnights;
     while (wn)
     {

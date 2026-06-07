@@ -1,5 +1,4 @@
 #include "movegen.h"
-#include "hash.h"
 
 u64 KNIGHT_MOVES[64];
 u64 KING_MOVES[64];
@@ -18,7 +17,7 @@ void promotions(MoveList& moves, int from, int to, int pawn, int captured)
     moves.push({ from, to, pawn, captured, flag, white ? WQ : BQ });
     moves.push({ from, to, pawn, captured, flag, white ? WR : BR });
     moves.push({ from, to, pawn, captured, flag, white ? WB : BB });
-    moves.push({ from, to, pawn, captured, flag, white ? WN: BN });
+    moves.push({ from, to, pawn, captured, flag, white ? WN : BN });
 }
 
 void generateWhitePawnMoves(const Board& board, MoveList& moves)

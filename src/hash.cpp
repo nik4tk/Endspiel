@@ -1,6 +1,6 @@
 #include "hash.h"
 
-u64 pieceKeys[12][64];
+u64 pieceKeys[13][64];
 u64 enPassantKeys[8];
 u64 castleKeys[16];
 u64 sideKey;
@@ -14,7 +14,7 @@ u64 randomU64()
 
 void initZobrist()
 {
-    for (int piece = 0; piece < 12; piece++)
+    for (int piece = 0; piece < 13; piece++)
     {
         for (int sq = 0; sq < 64; sq++)
         {
@@ -39,16 +39,10 @@ u64 generateHash(const Board& board)
     for (int sq = 0; sq < 64; sq++)
     {
         int piece = board.getPieceOnSquare(sq);
-        if (piece != NO_PIECE)
-        {
-            hash ^= pieceKeys[piece][sq];
-        }
+        if (piece != NO_PIECE) hash ^= pieceKeys[piece][sq];
     }
 
-    if (!board.whiteToMove)
-    {
-        hash ^= sideKey;
-    }
+    if (!board.whiteToMove) hash ^= sideKey;
 
     int castleIndex = 0;
     if (board.castleWK) castleIndex |= 1;

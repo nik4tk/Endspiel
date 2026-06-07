@@ -3,6 +3,7 @@
 #include "board.h"
 #include "movegen.h"
 #include "eval.h"
+#include  "tuning.h"
 
 enum TTFlag
 {
@@ -27,5 +28,7 @@ void clearTT();
 void storeTT(u64 hash, int depth, int flag, int score, Move bestMove);
 bool probeTT(u64 hash, int depth, int alpha, int beta, int& returnScore, Move& returnMove);
 
+int getPieceValue(int piece);
+int scoreMove(const Move& m);
 int minimax(Board& board, int depth, int alpha, int beta);
 Move bestMove(Board& board, int depth);
