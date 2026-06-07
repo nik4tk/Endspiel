@@ -44,11 +44,11 @@ bool probeTT(u64 hash, int depth, int alpha, int beta, int& returnScore, Move& r
                 return true;
             }
             if (entry.flag == TT_ALPHA && entry.score <= alpha) {
-                returnScore = alpha;
+                returnScore = entry.score;
                 return true;
             }
             if (entry.flag == TT_BETA && entry.score >= beta) {
-                returnScore = beta;
+                returnScore = entry.score;
                 return true;
             }
         }
@@ -56,20 +56,24 @@ bool probeTT(u64 hash, int depth, int alpha, int beta, int& returnScore, Move& r
     return false;
 }
 
+int getPieceValue(int piece)
+{
+    if (piece == WP || piece == BP) return 100;
+    if (piece == WN || piece == BN) return 320;
+    if (piece == WB || piece == BB) return 330;
+    if (piece == WR || piece == BR) return 500;
+    if (piece == WQ || piece == BQ) return 900;
+    return 0;
+}
+
 int scoreMove(const Move& m)
 {
     int score = 0;
-
     if (m.flags & CAPTURE)
     {
-        score = 1000 + (100 * m.capturePiece) - m.piece;
+        score = 1000 + getPieceValue(m.capturePiece) - getPieceValue(m.piece);
     }
-
-    if (m.flags & PROMOTION)
-    {
-        score += 900;
-    }
-
+    if (m.flags & PROMOTION) score += 900;
     return score;
 }
 
@@ -97,10 +101,11 @@ int minimax(Board& board, int depth, int alpha, int beta)
     }
 
     int flag = TT_ALPHA;
-    Move bestMoveFound;
+    Move bestMoveFound = { -1, -1, 0, 0, 0, 0 };
 
     if (board.whiteToMove)
     {
+        int flag = TT_ALPHA;
         int maxScore = -1000000;
         for (const Move& m : moves)
         {
@@ -120,7 +125,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
             }
             if (alpha >= beta)
             {
-                storeTT(board.hashKey, depth, TT_BETA, beta, m);
+                flag = TT_BETA;
                 break;
             }
         }
@@ -129,6 +134,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
     }
     else
     {
+        int flag = TT_BETA;
         int minScore = 1000000;
         for (const Move& m : moves)
         {
@@ -148,7 +154,7 @@ int minimax(Board& board, int depth, int alpha, int beta)
             }
             if (alpha >= beta)
             {
-                storeTT(board.hashKey, depth, TT_ALPHA, alpha, m);
+                flag = TT_ALPHA;
                 break;
             }
         }
@@ -159,33 +165,52 @@ int minimax(Board& board, int depth, int alpha, int beta)
 
 Move bestMove(Board& board, int depth)
 {
+    clearTT();
+
     MoveList moves = board.whiteToMove ? generateWhiteLegalMoves(board) : generateBlackLegalMoves(board);
-    Move best;
-    int bestScore = board.whiteToMove ? -1000000 : 1000000;
 
-    for (const Move& m : moves)
+    std::sort(moves.begin(), moves.end(), [](const Move& a, const Move& b)
     {
-        board.makeMove(m);
-        int score = minimax(board, depth - 1, -1000000, 1000000);
-        board.undoMove(m);
+    return scoreMove(a) > scoreMove(b);
+    });
 
-        if (board.whiteToMove)
+    Move best = { -1, -1, 0, 0, 0, 0 };
+    int alpha = -1000000;
+    int beta = 1000000;
+
+    if (board.whiteToMove)
+    {
+        int bestScore = -1000000;
+        for (const Move& m : moves)
         {
-            if (score > bestScore)
+            board.makeMove(m);
+            int score = minimax(board, depth - 1, alpha, beta);
+            board.undoMove(m);
+
+            if (score > bestScore || best.from == -1)
             {
                 bestScore = score;
                 best = m;
             }
-        }
-        else
-        {
-            if (score < bestScore)
-            {
-                bestScore = score;
-                best = m;
-            }
+            alpha = std::max(alpha, bestScore);
         }
     }
+    else
+    {
+        int bestScore = 1000000;
+        for (const Move& m : moves)
+        {
+            board.makeMove(m);
+            int score = minimax(board, depth - 1, alpha, beta);
+            board.undoMove(m);
 
+            if (score < bestScore || best.from == -1)
+            {
+                bestScore = score;
+                best = m;
+            }
+            beta = std::min(beta, bestScore);
+        }
+    }
     return best;
 }

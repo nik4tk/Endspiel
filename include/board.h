@@ -3,7 +3,6 @@
 #include <bit>
 
 #include "move.h"
-#include "hash.h"
 
 using u64 = uint64_t;
 

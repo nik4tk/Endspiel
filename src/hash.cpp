@@ -14,15 +14,19 @@ u64 randomU64()
 
 void initZobrist()
 {
-    for (int piece = 0; piece < 12; piece++) {
-        for (int sq = 0; sq < 64; sq++) {
+    for (int piece = 0; piece < 12; piece++)
+    {
+        for (int sq = 0; sq < 64; sq++)
+        {
             pieceKeys[piece][sq] = randomU64();
         }
     }
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++)
+    {
         enPassantKeys[i] = randomU64();
     }
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++)
+    {
         castleKeys[i] = randomU64();
     }
     sideKey = randomU64();
@@ -56,7 +60,7 @@ u64 generateHash(const Board& board)
 
     if (board.enPassantSq != -1)
     {
-        int epFile = board.enPassantSq % 8;
+        int epFile = board.enPassantSq & 7;
         hash ^= enPassantKeys[epFile];
     }
 

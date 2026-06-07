@@ -1,4 +1,5 @@
 #include "movegen.h"
+#include "hash.h"
 
 u64 KNIGHT_MOVES[64];
 u64 KING_MOVES[64];
@@ -7,6 +8,7 @@ void startUp()
 {
     initKnightMoves();
     initKingMoves();
+    initZobrist();
 }
 
 void promotions(MoveList& moves, int from, int to, int pawn, int captured)

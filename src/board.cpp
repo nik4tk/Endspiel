@@ -1,4 +1,5 @@
 #include "board.h"
+#include "hash.h"
 #include <iostream>
 
 int Board::getPieceOnSquare(int sq) const
@@ -84,7 +85,7 @@ void Board::makeMove(const Move& m)
     history[historyCount++] = { castleWK, castleWQ, castleBK, castleBQ, enPassantSq, whiteToMove, hashKey };
 
     hashKey ^= sideKey;
-    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq % 8];
+    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq & 7];
     int oldCastle = (castleWK ? 1 : 0) | (castleWQ ? 2 : 0) | (castleBK ? 4 : 0) | (castleBQ ? 8 : 0);
     hashKey ^= castleKeys[oldCastle];
 
@@ -212,7 +213,7 @@ void Board::makeMove(const Move& m)
     if (m.flags & DOUBLE_PAWN) enPassantSq = (m.piece == WP) ? m.to - 8 : m.to + 8;
     else enPassantSq = -1;
 
-    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq % 8];
+    if (enPassantSq != -1) hashKey ^= enPassantKeys[enPassantSq & 7];
     int newCastle = (castleWK ? 1 : 0) | (castleWQ ? 2 : 0) | (castleBK ? 4 : 0) | (castleBQ ? 8 : 0);
     hashKey ^= castleKeys[newCastle];
 
